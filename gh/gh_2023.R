@@ -106,7 +106,7 @@ p_network <- g %>%
   ) + 
   geom_node_point(aes(size=votos_totales, color=estado), show.legend = FALSE) +
   geom_node_label(aes(label=name, size=votos_totales, color=estado), 
-                  show.legend = FALSE, repel = TRUE) + 
+                  show.legend = FALSE, repel = TRUE, family='mono') + 
   scale_edge_color_manual(values = semanas_colores) +
   scale_color_manual(values=c("red","black"))+
   scale_edge_width(range = c(0.5, 1))+
@@ -186,16 +186,35 @@ title = textGrob("Gran hermano 2023",
 )
 
 subtitle = textGrob("Nominaciones por semana",
-  gp = gpar(fontface = 1, fontsize = 20, fontfamily='mono'),
-  hjust = 0.5, x = 0.5
+                 gp = gpar(fontface = 1, fontsize = 20, fontfamily='mono'),
+                 hjust = 0.5, x = 0.5
 )
+
+footnote <- grobTree(
+  gp = gpar(fontface = 1, fontsize = 12, fontfamily='mono'), 
+  textGrob(label = "En ", name = "title1",
+           x = unit(0.2, "lines"), 
+           hjust = 0, vjust = 0),
+  textGrob(label = "rojo", name = "title2",
+           x = grobWidth("title1") + unit(0.2, "lines"), 
+           hjust = 0, vjust = 0, gp = gpar(col = "red")),
+  textGrob(label = " los participantes que abandonaron la casa", name = "title3",
+           x = grobWidth("title1") + grobWidth("title2") + unit(0.2, "lines"), 
+           hjust = 0, vjust = 0)
+)
+
 
 caption = textGrob("@karbartolome",
   gp = gpar(fontface = 1, fontsize = 10, fontfamily='mono'),
-  hjust = 1, x = 0.9
+  hjust = 1, x = 0.95
 )
 
-p_final <- grid.arrange(title, subtitle, p, caption, heights=c(0.5,0.5, 8,1))
+p_final <- grid.arrange(title,
+                        subtitle,
+                        p,
+                        footnote,
+                        caption,
+                        heights = c(0.5, 0.5, 8, 0.8, 0.3))
 
 # Save --------------------------------------------------------------------
 ggsave2 <- function(..., bg = 'white') ggplot2::ggsave(..., bg = bg)
