@@ -38,6 +38,25 @@ tabla_participantes <- tablas %>%
   mutate(estado = ifelse(estado != "En competencia", "Eliminado", "En competencia"))
 
 # Nominaciones
+tabla_nominados_semana <- tablas %>% 
+  # Tabla 7
+  .[7] %>%
+  html_table(fill = TRUE) %>% 
+  data.frame() %>% 
+  filter(Var.1=="Nominados") %>% 
+  select(Semana.1:Semana.4) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    across(semana_1:semana_4,
+           ~ str_replace_all(., "(?<=[a-z])(?=[A-Z])", ", "))
+  ) %>% 
+  pivot_longer(cols=semana_1:semana_4, 
+               names_to='semana', 
+               values_to='nominados') %>% 
+  mutate(nominados = strsplit(nominados, ",\\s*"),
+         semana = str_replace(semana, 'semana_','Semana '))
+
+
 tabla_nominaciones <- tablas %>% 
   # Tabla 7
   .[7] %>%
@@ -128,10 +147,11 @@ eliminados <- tabla_participantes %>%
   pull(participantes)
 
 temp <- tabla_votos %>% 
-  select(participantes, starts_with('semana')) %>% 
+  select(participantes, starts_with('semana')) %>%
   pivot_longer(starts_with('semana'), names_to='semana', values_to='votos') %>% 
   mutate(
-    votos=as.numeric(votos), 
+    votos=as.numeric(votos),
+    votos = ifelse(is.na(votos),0,votos),
     semana=as.numeric(
       str_replace(ifelse(semana=="semana", 'semana_0',semana), 'semana_','')
     )+1,
@@ -139,9 +159,12 @@ temp <- tabla_votos %>%
     estado = ifelse(participantes %in% eliminados,'Eliminado','En competencia'),
     point_color = ifelse(estado=="Eliminado",0,semana)
   ) %>% 
-  filter(!is.na(votos)) %>% 
-  # Votos para nominación creo que son 5 (?)
-  filter(votos>=5)
+  left_join(tabla_nominados_semana) %>% 
+  mutate(nominado = map2(participantes, nominados, ~ ifelse(
+    ..1 %in% unlist(..2), 1, 0)
+  ) %>% as.numeric())%>%
+  filter(nominado==1) 
+
 
 p_votos <- temp %>% ggplot(
     aes(
@@ -160,7 +183,8 @@ p_votos <- temp %>% ggplot(
       background_y = list(
         element_rect(fill = semanas_colores[1]),
         element_rect(fill = semanas_colores[2]),
-        element_rect(fill = semanas_colores[3])
+        element_rect(fill = semanas_colores[3]),
+        element_rect(fill = semanas_colores[4])
       ), 
     )
   )+
