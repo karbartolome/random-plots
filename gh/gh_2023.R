@@ -39,18 +39,18 @@ tabla_participantes <- tablas %>%
 
 # Nominaciones
 tabla_nominaciones <- tablas %>% 
-  # Tabla 6
-  .[6] %>%
+  # Tabla 7
+  .[7] %>%
   html_table(fill = TRUE) %>% 
   data.frame() %>% 
   slice(3:24) %>% 
-  select(participantes = Var.1, Semana.1, Semana.2, Semana.3) %>% 
+  select(participantes = Var.1, Semana.1, Semana.2, Semana.3, Semana.4) %>% 
   janitor::clean_names() %>% 
   mutate(
-    across(semana_1:semana_3,
+    across(semana_1:semana_4,
            ~ str_replace_all(., "(?<=[a-z])(?=[A-Z])", ", "))
   ) %>% 
-  pivot_longer(cols=semana_1:semana_3, names_to='semana') %>% 
+  pivot_longer(cols=semana_1:semana_4, names_to='semana') %>% 
   separate(value, c("votos_2","votos_1"), ", ") 
 
 tabla_nominaciones <- tabla_nominaciones %>%
@@ -67,7 +67,7 @@ tabla_nominaciones <- tabla_nominaciones %>%
 # Votos
 tabla_votos <- tablas %>% 
   # Tabla 7
-  .[7] %>%
+  .[8] %>%
   html_table(fill = TRUE) %>% 
   data.frame() %>% 
   slice(2:23) %>% 
